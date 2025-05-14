@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLoaderData, useNavigate } from "react-router-dom";
-// import foodImg from "../assets/foodRecipe.png";
 import { BsStopwatchFill } from "react-icons/bs";
 import { FaHeart } from "react-icons/fa6";
 import { FaEdit } from "react-icons/fa";
@@ -9,99 +8,103 @@ import axios from "axios";
 
 export default function RecipeItems() {
   const recipies = useLoaderData();
-  const [allRecipies, setAllRecipies] = useState();
-  let path = window.location.pathname === "/myRecipie" ? true : false;
-  let favItems = JSON.parse(localStorage.getItem("fav")) ?? [];
+  const [allRecipies, setAllRecipies] = useState([]);
   const [isFavRecipie, setIsFavRecipie] = useState(false);
-  const navigate = useNavigate();
-  console.log(allRecipies);
   const [expandedCard, setExpandedCard] = useState(null);
+  const navigate = useNavigate();
+
+  const path = window.location.pathname === "/myRecipie";
+  let favItems = JSON.parse(localStorage.getItem("fav") || "[]");
 
   useEffect(() => {
-    setAllRecipies(recipies);
+    setAllRecipies(recipies || []);
   }, [recipies]);
 
   const onDelete = async (id) => {
-    await axios
-      .delete(`http://localhost:5000/recipie/${id}`)
-      .then((res) => console.log(res));
-    setAllRecipies((recipies) =>
-      recipies.filter((recipie) => recipie._id !== id)
-    );
-    let filterItem = favItems.filter((recipie) => recipie._id !== id);
-    localStorage.setItem("fav", JSON.stringify(filterItem));
+    try {
+      await axios.delete(`${import.meta.env.VITE_BACKEND_URL}/recipie/${id}`);
+      setAllRecipies((prev) => prev.filter((recipie) => recipie._id !== id));
+      const updatedFavs = favItems.filter((recipie) => recipie._id !== id);
+      localStorage.setItem("fav", JSON.stringify(updatedFavs));
+    } catch (err) {
+      console.error("Error deleting recipe:", err);
+    }
   };
 
   const favRecipie = (item) => {
-    let filterItem = favItems.filter((recipie) => recipie._id !== item._id);
-    favItems =
-      favItems.filter((recipie) => recipie._id === item._id).length === 0
-        ? [...favItems, item]
-        : filterItem;
-    localStorage.setItem("fav", JSON.stringify(favItems));
-    setIsFavRecipie((pre) => !pre);
+    const alreadyFav = favItems.some((recipie) => recipie._id === item._id);
+    const updatedFavs = alreadyFav
+      ? favItems.filter((recipie) => recipie._id !== item._id)
+      : [...favItems, item];
+
+    localStorage.setItem("fav", JSON.stringify(updatedFavs));
+    setIsFavRecipie((prev) => !prev);
   };
 
   return (
-    <>
-      <div className="card-container">
-        {allRecipies?.map((item, index) => {
-          return (
-            <div
-              key={index}
-              className="card"
-              onClick={() =>
-  setExpandedCard(expandedCard === item._id ? null : item._id)
-}
-            >
-              <img
-                src={`http://localhost:5000/images/${item.coverImg}`}  /*<img src={`http://localhost:5000/images/${item.coverImage}`} width="120px" height="100px"></img> */
-                width="120px"
-                height="100px"
-                className="IconImage"
-              ></img>
-              <div className="card-body">
-                <div className="title">{item.title}</div>
-                <div className="icons">
-                  <div className="timer">
-                    <BsStopwatchFill />
-                    {item.time}
-                  </div>
-                  {!path ? (
-                    <FaHeart
-                      onClick={() => favRecipie(item)}
-                      style={{
-                        color: favItems.some((res) => res._id === item._id)
-                          ? "red"
-                          : "",
-                      }}
-                    />
-                  ) : (
-                    <div className="action">
-                      <Link
-                        to={`/editRecipie/${item._id}`}
-                        className="editIcon"
-                      >
-                        <FaEdit />
-                      </Link>
-                      <MdDelete
-                        onClick={() => onDelete(item._id)}
-                        className="deleteIcon"
-                      />
-                    </div>
-                  )}
+    <div className="card-container">
+      {Array.isArray(allRecipies) && allRecipies.length > 0 ? (
+        allRecipies.map((item) => (
+          <div
+            key={item._id}
+            className="card"
+            onClick={() =>
+              setExpandedCard(expandedCard === item._id ? null : item._id)
+            }
+          >
+            <img
+              src={`${import.meta.env.VITE_BACKEND_URL}/images/${item.coverImg}`}
+              width="120px"
+              height="100px"
+              className="IconImage"
+              alt={item.title}
+            />
+            <div className="card-body">
+              <div className="title">{item.title}</div>
+              <div className="icons">
+                <div className="timer">
+                  <BsStopwatchFill />
+                  {item.time}
                 </div>
+                {!path ? (
+                  <FaHeart
+                    onClick={() => favRecipie(item)}
+                    style={{
+                      color: favItems.some((res) => res._id === item._id)
+                        ? "red"
+                        : "",
+                    }}
+                  />
+                ) : (
+                  <div className="action">
+                    <Link to={`/editRecipie/${item._id}`} className="editIcon">
+                      <FaEdit />
+                    </Link>
+                    <MdDelete
+                      onClick={() => onDelete(item._id)}
+                      className="deleteIcon"
+                    />
+                  </div>
+                )}
               </div>
-              {expandedCard === item._id && (
-  <div className="expanded-content">
-    <p className="Expanded-text"><strong className="expanded-heading">Ingredients:</strong> {item.ingredients}</p>
-    <p className="Expanded-text"><strong className="expanded-heading" >Instructions:</strong> {item.instructions}</p>
-  </div>
-)}
             </div>
-          );
-        })}
-      </div>
-    </>
+            {expandedCard === item._id && (
+              <div className="expanded-content">
+                <p className="Expanded-text">
+                  <strong className="expanded-heading">Ingredients:</strong>{" "}
+                  {item.ingredients}
+                </p>
+                <p className="Expanded-text">
+                  <strong className="expanded-heading">Instructions:</strong>{" "}
+                  {item.instructions}
+                </p>
+              </div>
+            )}
+          </div>
+        ))
+      ) : (
+        <p>No recipes found.</p>
+      )}
+    </div>
   );
 }
