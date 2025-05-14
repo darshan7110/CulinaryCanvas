@@ -1,0 +1,14 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="64" height="64" rx="12" fill="#FFDAC1"/>
+  <g>
+    <!-- Top bun -->
+    <path d="M16 30C16 24 48 24 48 30H16Z" fill="#FFB88C"/>
+    <!-- Lettuce -->
+    <rect x="16" y="30" width="32" height="4" rx="2" fill="#A8E6CF"/>
+    <!-- Patty -->
+    <rect x="16" y="34" width="32" height="6" rx="3" fill="#D96459"/>
+    <!-- Bottom bun -->
+    <path d="M16 40H48V42C48 45 44 48 32 48C20 48 16 45 16 42V40Z" fill="#FFB88C"/>
+  </g>
+  <circle cx="32" cy="32" r="30" stroke="#E67350" stroke-width="2"/>
+</svg>
